@@ -62,3 +62,14 @@ vim.api.nvim_set_keymap('n', '<leader>op', ':OpenProject<CR>', { noremap = true,
 
 - `:CreateProject` - Create a new project
 - `:OpenProject` - Open an existing project using Telescope
+
+## Keymaps
+
+- `<leader>cp` : Create project - Crée un projet.
+- `<leader>op` : Open project - Ouvre un projet.
+
+---
+
+## A implémenter :
+- Enregistrement projet dans un fichier dédié, et ouverture d'un projet depuis cette liste (via **telescope**)
+
