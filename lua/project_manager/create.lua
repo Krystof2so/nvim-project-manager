@@ -10,17 +10,18 @@
 
 local M = {}
 local telescope_builtin = require('telescope.builtin')
+local action_state = require('telescope.actions.state')
 
 -- Fonction pour choisir un répertoire avec Telescope
 local function choose_directory(callback)
-    telescope_builtin.find_files({
+    telescope_builtin.file_browser({
         prompt_title = "Choisissez un répertoire",
         cwd = os.getenv("HOME"),  -- Ouvre Telescope dans le répertoire personnel
-				find_command = { "fd", "--type", "d", "--hidden", "--exclude", ".git" }, -- Filtre pour n'afficher que les répertoires
+				hidden = true, -- Affiche les dossiers et fichiers cachés
         attach_mappings = function(prompt_bufnr, map)
             -- Mappage pour sélectionner un répertoire
             map('i', '<CR>', function()
-                local selection = require('telescope.actions.state').get_selected_entry()
+                local selection = action_state.get_selected_entry()
                 require('telescope.actions').close(prompt_bufnr)
                 if selection then
                     callback(selection.path)  -- Passer le chemin sélectionné
