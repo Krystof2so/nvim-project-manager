@@ -7,7 +7,7 @@ local open = require("project_manager.open")
 local M = {}
 
 -- Importation des fonctions
-M.create_project = create.create_project
+M.create_project = create.create_project_with_telescope
 M.open_project = open.open_project
 
 return M
