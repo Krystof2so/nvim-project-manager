@@ -9,94 +9,49 @@
 -- *************************************************************************
 
 local M = {}
-local popup = require('popup')
 
+-- Fonction pour créer un nouveau projet dans un répertoire sélectionné via Telescope
+function M.create_project_with_telescope()
+    -- Utiliser Telescope pour choisir le répertoire cible
+    require('telescope.builtin').find_files({
+        prompt_title = "Choisissez le répertoire cible",
+        cwd = vim.fn.expand("~"),  -- Commence dans le répertoire home
+        find_command = { "fd", "--type", "d", "--hidden", "--exclude", ".git" }, -- Limite la recherche aux répertoires
+        attach_mappings = function(prompt_bufnr, map)
+            local actions = require('telescope.actions')
+            local action_state = require('telescope.actions.state')
 
--- ******************************************************
--- * Function to create popup :                         *
--- * - displays directory path entry prompt             *
--- * -------------------------------------------------- *
--- * Fonction pour créer un popup :                     *
--- * - affiche prompt de saisie de chemin de répertoire *
--- ******************************************************
-function M.create_popup(title, prompt, confirm_fn, close_fn)
-    local buf = vim.api.nvim_create_buf(false, true) -- Prépare un buffer pour afficher le popup 
-		-- Utilisation de l'API moderne pour définir les options du buffer :
-    vim.bo[buf].buftype = 'nofile'   -- Le buffer n'est pas lié à un fichier
-    vim.bo[buf].bufhidden = 'wipe'   -- Supprimer le buffer de la mémoire une fois fermé
-    local opts = {
-        title = title,
-        border = "single",
-        relative = "editor",
-        width = 40,
-        height = 5,
-        row = math.ceil((vim.o.lines - 5) / 2),
-        col = math.ceil((vim.o.columns - 40) / 2),
-    }
+            -- Fonction pour confirmer la sélection et créer un sous-répertoire
+            local function confirm_selection()
+                local selection = action_state.get_selected_entry()
+                actions.close(prompt_bufnr)
 
-    -- Ouvrir le popup :
-    vim.api.nvim_open_win(buf, true, opts)
+                -- Obtenir le chemin sélectionné
+                local selected_directory = selection.path or selection[1]
 
-    -- Insérer le message d'invite :
-    vim.api.nvim_buf_set_lines(buf, 0, -1, false, {prompt, "", ""})
+                -- Demander le nom du projet
+                local project_name = vim.fn.input("Nom du projet: ")
 
-    -- Mappage des touches :
-		-- Touche pour appeler la fonction confirm_input() :
-    vim.api.nvim_buf_set_keymap(buf, 'n', '<CR>', string.format('<cmd>lua require("project_manager.create").%s()<CR>', confirm_fn), { noremap = true, silent = true })
-		-- Touche pour appelr la fonction close_popup() :
-    vim.api.nvim_buf_set_keymap(buf, 'n', 'q', string.format('<cmd>lua require("project_manager.create").%s()<CR>', close_fn), { noremap = true, silent = true })
-end
+                if project_name == "" then
+                    vim.notify("Nom du projet non spécifié, opération annulée.", vim.log.levels.WARN)
+                    return
+                end
 
+                -- Construire le chemin complet du nouveau répertoire
+                local project_path = selected_directory .. "/" .. project_name
 
--- ************************************************************
--- * Function to confirm input :                              *
--- * - Create project directory                               *
--- * - Confirms the creation of this directory with a message *
--- * - Create repertory and dsplay confirmation               *
--- * -------------------------------------------------------- *
--- * Fonction pour confirmer l'entrée utilisateur :           *
--- * - Crée répertoire du projet                              *
--- * - Confirme la création de ce répertoire par un message   *
--- ************************************************************
-function M.confirm_input()
-    local buf = vim.api.nvim_get_current_buf()
-    local lines = vim.api.nvim_buf_get_lines(buf, 1, 2, false) -- Obtenir la ligne de saisie
-    local project_directory = lines[1] or ""
+                -- Créer le répertoire
+                vim.fn.mkdir(project_path, "p")
+                vim.notify("Projet créé dans : " .. project_path)
+            end
 
-    if project_directory == "" then
-        vim.notify("Aucun répertoire spécifié, opération annulée.", vim.log.levels.WARN)
-        M.close_popup()
-        return
-    end
+            -- Mapper la touche Enter pour confirmer la sélection
+            map('i', '<CR>', confirm_selection)
+            map('n', '<CR>', confirm_selection)
 
-    -- Créer le répertoire s'il n'existe pas :
-    vim.fn.mkdir(project_directory, "p")
-    vim.notify("Projet créé dans : " .. project_directory)
-    M.close_popup() -- Fermer le popup après création
-end
-
-
--- *********************************
--- * Function to close popup       *
--- * Fonction pour fermer le popup *
--- *********************************
-function M.close_popup()
-    local win = vim.api.nvim_get_current_win()
-    vim.api.nvim_win_close(win, true)
-end
-
-
--- *********************************
--- * Function to create project    *
--- * Fonction pour créer un projet *
--- *********************************
-function M.create_project()
-    M.create_popup( -- Ouverture d'un popup
-        "Créer un nouveau projet",
-        "Entrez le chemin du répertoire :",
-        "confirm_input",  -- Fonction à appeler pour confirmer
-        "close_popup"     -- Fonction à appeler pour fermer
-    )
+            return true
+        end
+    })
 end
 
 return M
