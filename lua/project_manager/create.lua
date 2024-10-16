@@ -9,8 +9,12 @@
 -- *************************************************************************
 
 local M = {}
+local telescope = require('telescope')
 local telescope_builtin = require('telescope.builtin')
 local action_state = require('telescope.actions.state')
+
+-- Charge l'extension file-browser
+telescope.load_extension('file_browser')
 
 -- Fonction pour choisir un répertoire avec Telescope
 local function choose_directory(callback)
