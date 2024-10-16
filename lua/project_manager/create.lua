@@ -15,7 +15,8 @@ local telescope_builtin = require('telescope.builtin')
 local function choose_directory(callback)
     telescope_builtin.find_files({
         prompt_title = "Choisissez un répertoire",
-        cwd = vim.fn.getcwd(),  -- Point de départ pour la recherche
+        cwd = os.getenv("HOME"),  -- Ouvre Telescope dans le répertoire personnel
+				find_command = { "fd", "--type", "d", "--hidden", "--exclude", ".git" }, -- Filtre pour n'afficher que les répertoires
         attach_mappings = function(prompt_bufnr, map)
             -- Mappage pour sélectionner un répertoire
             map('i', '<CR>', function()
